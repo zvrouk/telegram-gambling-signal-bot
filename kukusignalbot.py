@@ -1,13 +1,14 @@
 import random
 import logging
 import asyncio
+import os
 from aiohttp import web
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, BotCommand, ChatJoinRequest
 
 # ================= CONFIGURATION =================
-BOT_TOKEN = "8752011014:AAHS2joXl3HVmv-HRuUbS-C5qg4_LB31V4M"
+BOT_TOKEN = os.getenv("BOT_TOKEN")  # Set your bot token
 REF_URL = "https://lkyr.cc/6335d9"
 CHANNEL_URL = "https://t.me/+WF5cBxNLYy0wMGU0"
 CHANNEL_ID = -1002163714024
