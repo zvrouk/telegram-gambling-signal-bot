@@ -4,7 +4,7 @@ import asyncio
 from aiohttp import web
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, BotCommand
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, BotCommand, ChatJoinRequest
 
 # ================= CONFIGURATION =================
 BOT_TOKEN = "8752011014:AAHS2joXl3HVmv-HRuUbS-C5qg4_LB31V4M"
@@ -38,6 +38,21 @@ async def start_dummy_server():
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", 8080)
     await site.start()
+
+# ================= AUTOMATIC JOIN REQUEST APPROVAL =================
+@dp.chat_join_request()
+async def auto_approve_join_request(request: ChatJoinRequest):
+    """Automatically approves join requests to the channel."""
+    try:
+        await request.approve()
+        user = request.from_user
+        logging.info(f"Approved join request for {user.full_name} ({user.id})")
+        
+        await notify_admin_log(
+            f"✅ **Auto-Approved Join Request:** {user.full_name} (@{user.username or 'No_Username'}) [`{user.id}`]"
+        )
+    except Exception as e:
+        logging.error(f"Failed to approve join request: {e}")
 
 # ================= LOCALIZATION TEXTS =================
 TEXTS = {
@@ -399,7 +414,6 @@ async def chicken_subway_handler(callback: types.CallbackQuery):
         s1_1=s1[0], s1_2=s1[1], s1_3=s1[2], r1=r1,
         s2_1=s2[0], s2_2=s2[1], s2_3=s2[2], r2=r2,
         s3_1=s3[0], s3_2=s3[1], s3_3=s3[2], r3=r3,
-        s4_1=s4[0], s4_2=s4[1], s4_3=s4[2], r4=r4,
         s5_1=s5[0], s5_2=s5[1], s5_3=s5[2]
     )
 
@@ -413,7 +427,7 @@ async def chicken_subway_handler(callback: types.CallbackQuery):
 async def main():
     await set_bot_commands()
     await start_dummy_server()  # Starts the server to fulfill Render's health checks
-    await dp.start_polling(bot)
+    await dp.start_polling(bot, allowed_updates=["message", "callback_query", "chat_join_request"])
 
 if __name__ == "__main__":
     asyncio.run(main())
