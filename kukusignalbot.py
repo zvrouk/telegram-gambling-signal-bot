@@ -1,6 +1,7 @@
 import random
 import logging
 import asyncio
+from aiohttp import web
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, BotCommand
@@ -21,8 +22,22 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
-# In-memory user state storage for language preference (defaults to 'en')
+# In-memory user state storage for language preference
 user_lang = {}
+
+# ================= DUMMY WEB SERVER FOR RENDER =================
+async def handle_ping(request):
+    """Keeps Render Free Web Service happy by answering HTTP checks."""
+    return web.Response(text="Bot is online and polling!")
+
+async def start_dummy_server():
+    """Starts a lightweight web server on port 8080."""
+    app = web.Application()
+    app.router.add_get("/", handle_ping)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", 8080)
+    await site.start()
 
 # ================= LOCALIZATION TEXTS =================
 TEXTS = {
@@ -148,14 +163,12 @@ TEXTS = {
     }
 }
 
-
 async def set_bot_commands():
     """Sets the native Telegram command menu button."""
     commands = [
         BotCommand(command="start", description="🚀 Main Signal Menu / Menyu Kuu")
     ]
     await bot.set_my_commands(commands)
-
 
 async def check_subscription(user_id: int) -> bool:
     """Verifies if the user is a member of the public VIP channel."""
@@ -168,14 +181,12 @@ async def check_subscription(user_id: int) -> bool:
         logging.error(f"Error checking membership for {CHANNEL_ID}: {e}")
         return False
 
-
 async def notify_admin_log(text: str):
     """Sends activity notifications to your private log channel."""
     try:
         await bot.send_message(chat_id=VERIFY_CHANNEL_ID, text=text, parse_mode="Markdown")
     except Exception as e:
         logging.error(f"Failed to send log notification to {VERIFY_CHANNEL_ID}: {e}")
-
 
 # ================= KEYBOARD BUILDERS =================
 def get_lang_keyboard():
@@ -188,7 +199,6 @@ def get_lang_keyboard():
         ]
     )
 
-
 def get_sub_keyboard(lang="en"):
     t = TEXTS[lang]
     return InlineKeyboardMarkup(
@@ -198,7 +208,6 @@ def get_sub_keyboard(lang="en"):
             [InlineKeyboardButton(text=t["btn_support"], url=SUPP)]
         ]
     )
-
 
 def get_registration_keyboard(lang="en"):
     t = TEXTS[lang]
@@ -210,7 +219,6 @@ def get_registration_keyboard(lang="en"):
             [InlineKeyboardButton(text=t["btn_support"], url=SUPP)]
         ]
     )
-
 
 def get_main_keyboard(lang="en"):
     t = TEXTS[lang]
@@ -232,7 +240,6 @@ def get_main_keyboard(lang="en"):
         ]
     )
 
-
 def get_back_keyboard(lang="en"):
     t = TEXTS[lang]
     return InlineKeyboardMarkup(
@@ -240,7 +247,6 @@ def get_back_keyboard(lang="en"):
             [InlineKeyboardButton(text=t["btn_menu"], callback_data="main_menu")]
         ]
     )
-
 
 # ================= BOT HANDLERS =================
 @dp.message(Command("start"))
@@ -250,12 +256,10 @@ async def start_command(message: types.Message):
         f"🤖 **Bot Started:** {user.full_name} (@{user.username or 'No_Username'}) [`{user.id}`]"
     )
     
-    # Prompt for language selection first
     await message.answer(
         TEXTS["en"]["welcome"],
         reply_markup=get_lang_keyboard()
     )
-
 
 @dp.callback_query(F.data.startswith("set_lang_"))
 async def set_language_callback(callback: types.CallbackQuery):
@@ -279,7 +283,6 @@ async def set_language_callback(callback: types.CallbackQuery):
             reply_markup=get_registration_keyboard(lang)
         )
 
-
 @dp.callback_query(F.data == "change_lang")
 async def change_lang_callback(callback: types.CallbackQuery):
     await callback.answer()
@@ -287,7 +290,6 @@ async def change_lang_callback(callback: types.CallbackQuery):
         TEXTS["en"]["welcome"],
         reply_markup=get_lang_keyboard()
     )
-
 
 @dp.callback_query(F.data == "check_sub")
 async def verify_sub_callback(callback: types.CallbackQuery):
@@ -312,7 +314,6 @@ async def verify_sub_callback(callback: types.CallbackQuery):
             show_alert=True
         )
 
-
 @dp.callback_query(F.data == "show_tutorial")
 async def tutorial_callback(callback: types.CallbackQuery):
     await callback.answer()
@@ -324,7 +325,6 @@ async def tutorial_callback(callback: types.CallbackQuery):
         parse_mode="Markdown",
         reply_markup=get_back_keyboard(lang)
     )
-
 
 @dp.callback_query(F.data == "main_menu")
 async def main_menu_callback(callback: types.CallbackQuery):
@@ -338,7 +338,6 @@ async def main_menu_callback(callback: types.CallbackQuery):
         reply_markup=get_main_keyboard(lang)
     )
 
-
 @dp.callback_query(F.data == "show_promo")
 async def promo_callback(callback: types.CallbackQuery):
     await callback.answer()
@@ -351,7 +350,6 @@ async def promo_callback(callback: types.CallbackQuery):
         reply_markup=get_back_keyboard(lang)
     )
 
-
 @dp.callback_query(F.data == "game_mines")
 async def mines_handler(callback: types.CallbackQuery):
     await callback.answer()
@@ -359,7 +357,6 @@ async def mines_handler(callback: types.CallbackQuery):
     lang = user_lang.get(user.id, "en")
     t = TEXTS[lang]
 
-    # Reveal 20 positions (80%): 16 safe diamonds, 4 danger mines
     grid = [["⬛" for _ in range(5)] for _ in range(5)]
     revealed = random.sample(range(25), 20)
     diamonds, mines = revealed[:16], revealed[16:]
@@ -379,7 +376,6 @@ async def mines_handler(callback: types.CallbackQuery):
         reply_markup=get_main_keyboard(lang)
     )
 
-
 @dp.callback_query(F.data == "game_chicken_subway")
 async def chicken_subway_handler(callback: types.CallbackQuery):
     await callback.answer()
@@ -387,7 +383,6 @@ async def chicken_subway_handler(callback: types.CallbackQuery):
     lang = user_lang.get(user.id, "en")
     t = TEXTS[lang]
 
-    # Generate multipliers
     s1 = [round(random.uniform(1.10, 1.25), 2), round(random.uniform(1.30, 1.50), 2), round(random.uniform(1.60, 2.00), 2)]
     s2 = [round(random.uniform(1.40, 1.80), 2), round(random.uniform(1.90, 2.40), 2), round(random.uniform(2.50, 3.20), 2)]
     s3 = [round(random.uniform(2.20, 2.80), 2), round(random.uniform(3.00, 4.20), 2), round(random.uniform(4.50, 6.00), 2)]
@@ -415,11 +410,10 @@ async def chicken_subway_handler(callback: types.CallbackQuery):
         reply_markup=get_main_keyboard(lang)
     )
 
-
 async def main():
     await set_bot_commands()
+    await start_dummy_server()  # Starts the server to fulfill Render's health checks
     await dp.start_polling(bot)
-
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -1,1 +1,1 @@
-worker: python kukusignalbot.py
+web: python kukusignalbot.py
