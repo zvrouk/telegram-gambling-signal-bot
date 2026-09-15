@@ -428,7 +428,10 @@ async def chicken_subway_handler(callback: types.CallbackQuery):
 async def main():
     await set_bot_commands()
     await start_dummy_server()  # Starts the server to fulfill Render's health checks
+    try:
     await dp.start_polling(bot, allowed_updates=["message", "callback_query", "chat_join_request"])
+finally: # clean up aiohttp client session on shutdown
+await bot.session.close()
 
 if __name__ == "__main__":
     asyncio.run(main())
