@@ -250,7 +250,7 @@ async def start_dummy_server():
 # Main Entry Point
 async def main():
     await set_bot_commands()
-    await start_dummy_server()
+    await start_dummy_server()  # Starts the server for Render health checks
     
     try:
         await dp.start_polling(
@@ -258,6 +258,7 @@ async def main():
             allowed_updates=["message", "callback_query", "chat_join_request"]
         )
     finally:
+        # Clean up aiohttp client session on shutdown
         await bot.session.close()
 
 if __name__ == "__main__":
