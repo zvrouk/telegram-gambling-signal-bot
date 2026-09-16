@@ -104,8 +104,8 @@ async def notify_admin_log(text: str):
 # Keyboards
 def get_lang_keyboard():
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🇬🇧 English", callback_query_data="set_lang_en"),
-         InlineKeyboardButton(text="🇰🇪 Swahili", callback_query_data="set_lang_sw")]
+        [InlineKeyboardButton(text="🇬🇧 English", callback_data="set_lang_en"),
+         InlineKeyboardButton(text="🇰🇪 Swahili", callback_data="set_lang_sw")]
     ])
 
 def get_main_keyboard(lang="en"):
