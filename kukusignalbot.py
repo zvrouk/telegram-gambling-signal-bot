@@ -94,13 +94,38 @@ TEXTS = {
     }
 }
 
-# Helper: Notify Admin Log Channel
+# Safe Admin Log Notification (Prevents Bot Crashes on Log Errors)
 async def notify_admin_log(text: str):
     try:
+        # Sanitize text or send without strict markdown parsing if it fails
         await bot.send_message(chat_id=VERIFY_CHANNEL_ID, text=text, parse_mode="Markdown")
     except Exception as e:
         logging.error(f"Failed to send log notification to {VERIFY_CHANNEL_ID}: {e}")
 
+# Fixed Language Handler
+@dp.callback_query(F.data.startswith("set_lang_"))
+async def set_language_handler(callback: types.CallbackQuery):
+    await callback.answer()
+    
+    lang = callback.data.split("_")[2]
+    user = callback.from_user
+    user_lang[user.id] = lang
+    t = TEXTS[lang]
+    
+    # Safe User Display Name (escapes markdown special characters)
+    safe_name = user.full_name.replace("_", "\\_").replace("*", "\\*").replace("`", "\\`").replace("[", "\\[")
+    
+    # Send log safely without blocking the user flow
+    asyncio.create_task(
+        notify_admin_log(f"👤 **New User Set Language:** {safe_name} (`{user.id}`) ➡️ `{lang.upper()}`")
+    )
+    
+    # Edit message to welcome screen
+    await callback.message.edit_text(
+        t["welcome"].format(promo=PROMO),
+        reply_markup=get_main_keyboard(lang),
+        parse_mode="Markdown"
+    )
 # Keyboards
 def get_lang_keyboard():
     return InlineKeyboardMarkup(inline_keyboard=[
