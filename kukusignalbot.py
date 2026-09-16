@@ -323,7 +323,7 @@ async def mines_handler(callback: types.CallbackQuery):
 
     # 20 tiles revealed (80%), 5 unrevealed (20%)
     revealed_tiles = ["💎" if random.random() < 0.75 else "💣" for _ in range(20)]
-    unrevealed_tiles = ["❓" for _ in range(5)]
+    unrevealed_tiles = ["🟦" for _ in range(5)]
     grid_pool = revealed_tiles + unrevealed_tiles
     random.shuffle(grid_pool)
 
