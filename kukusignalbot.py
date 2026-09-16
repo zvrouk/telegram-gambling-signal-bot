@@ -36,22 +36,25 @@ TEXTS = {
             "🔥 **Use Promo Code:** `{promo}` for a **500% Deposit Bonus!**\n\n"
             "Select an option below to continue:"
         ),
-        "mines_title": "💣 **1WIN MINES SIGNAL GENERATED**\n\nAccuracy: **80%**\nGrid Size: **5x5**\n\nReveal the safe tiles on 1Win now!",
+        "mines_title": (
+            "💣 **1WIN MINES SIGNAL GENERATED**\n\n"
+            "📊 **Grid Status:** 80% Revealed (20/25 Tiles)\n"
+            "Grid Size: **5x5**\n\n"
+            "Reveal the safe tiles on 1Win now!"
+        ),
         "chicken_title": (
-            "🐔 **CHICKEN SUBWAY SIGNAL**\n\n"
+            "🐔 **CHICKEN SUBWAY SIGNAL** 🏃‍♂️💨\n\n"
             "📍 **Step 1:** Odds ({s1_1}, {s1_2}, {s1_3}) ➡️ **Pick {r1}**\n"
             "📍 **Step 2:** Odds ({s2_1}, {s2_2}, {s2_3}) ➡️ **Pick {r2}**\n"
             "📍 **Step 3:** Odds ({s3_1}, {s3_2}, {s3_3}) ➡️ **Pick {r3}**\n"
             "📍 **Step 4:** Odds ({s4_1}, {s4_2}, {s4_3}) ➡️ **Pick {r4}**\n"
-            "📍 **Step 5:** Odds ({s5_1}, {s5_2}, {s5_3}) ➡️ **Cash Out!**\n\n"
+            "📍 **Step 5:** Odds ({s5_1}, {s5_2}, {s5_3}) ➡️ **Cash Out!** 💰\n\n"
             "⚠️ Stick to the exact path for maximum accuracy!"
         ),
-        "register_text": (
-            "📌 **HOW TO REGISTER & GET 500% BONUS**\n\n"
-            "1. Click the link below to open 1Win.\n"
-            "2. Fill in your details.\n"
-            "3. Use Promo Code: `{promo}`\n"
-            "4. Make your deposit and start winning!"
+        "not_member": (
+            "⚠️ **VIP CHANNEL VERIFICATION REQUIRED**\n\n"
+            "To access signals, you must join our official Telegram channel first.\n"
+            "Click below to request access, then tap **✅ Verify Access**!"
         ),
         "btn_mines": "💣 Mines Signal",
         "btn_chicken": "🐔 Chicken Subway",
@@ -68,22 +71,25 @@ TEXTS = {
             "🔥 **Tumia Promo Code:** `{promo}` kupata **Bonus ya 500%!**\n\n"
             "Chagua chaguo hapa chini kuendelea:"
         ),
-        "mines_title": "💣 **ISHARA YA 1WIN MINES**\n\nUsahihi: **80%**\nUkubwa wa Grid: **5x5**\n\nFungua vigae salama kwenye 1Win sasa!",
+        "mines_title": (
+            "💣 **ISHARA YA 1WIN MINES**\n\n"
+            "📊 **Hali ya Grid:** 80% Imefunguliwa (Vigae 20/25)\n"
+            "Ukubwa wa Grid: **5x5**\n\n"
+            "Fungua vigae salama kwenye 1Win sasa!"
+        ),
         "chicken_title": (
-            "🐔 **ISHARA YA CHICKEN SUBWAY**\n\n"
+            "🐔 **ISHARA YA CHICKEN SUBWAY** 🏃‍♂️💨\n\n"
             "📍 **Hatua ya 1:** Odds ({s1_1}, {s1_2}, {s1_3}) ➡️ **Chagua {r1}**\n"
             "📍 **Hatua ya 2:** Odds ({s2_1}, {s2_2}, {s2_3}) ➡️ **Chagua {r2}**\n"
             "📍 **Hatua ya 3:** Odds ({s3_1}, {s3_2}, {s3_3}) ➡️ **Chagua {r3}**\n"
             "📍 **Hatua ya 4:** Odds ({s4_1}, {s4_2}, {s4_3}) ➡️ **Chagua {r4}**\n"
-            "📍 **Hatua ya 5:** Odds ({s5_1}, {s5_2}, {s5_3}) ➡️ **Chukua Pesa!**\n\n"
+            "📍 **Hatua ya 5:** Odds ({s5_1}, {s5_2}, {s5_3}) ➡️ **Chukua Pesa!** 💰\n\n"
             "⚠️ Fuata njia halisi kwa usahihi wa hali ya juu!"
         ),
-        "register_text": (
-            "📌 **JINSI YA KUJISAJILI NA KUPATA BONUS YA 500%**\n\n"
-            "1. Bofya kiungo hapa chini kufungua 1Win.\n"
-            "2. Jaza maelezo yako.\n"
-            "3. Tumia Promo Code: `{promo}`\n"
-            "4. Weka akiba yako na uanze kushinda!"
+        "not_member": (
+            "⚠️ **UTHIBITISHO WA CHANNEL YA VIP UNAHITAJIKA**\n\n"
+            "Ili kupata ishara, lazima ujiunge na chaneli yetu rasmi ya Telegram kwanza.\n"
+            "Bofya hapa chini kuomba kujiunga, kisha ubonyeze **✅ Thibitisha Ufikiaji**!"
         ),
         "btn_mines": "💣 Ishara ya Mines",
         "btn_chicken": "🐔 Chicken Subway",
@@ -102,7 +108,7 @@ def escape_md(text: str) -> str:
         text = text.replace(char, f"\\{char}")
     return text
 
-# Safe Admin Log Notification (Prevents Bot Crashes on Log Errors)
+# Safe Admin Log Notification
 async def notify_admin_log(text: str):
     if not VERIFY_CHANNEL_ID:
         return
@@ -110,6 +116,15 @@ async def notify_admin_log(text: str):
         await bot.send_message(chat_id=VERIFY_CHANNEL_ID, text=text, parse_mode="Markdown")
     except Exception as e:
         logging.error(f"Failed to send log notification to {VERIFY_CHANNEL_ID}: {e}")
+
+# Helper Function: Check Channel Membership
+async def check_channel_member(user_id: int) -> bool:
+    try:
+        member = await bot.get_chat_member(chat_id=CHANNEL_ID, user_id=user_id)
+        return member.status in ["creator", "administrator", "member"]
+    except Exception as e:
+        logging.error(f"Error checking channel membership for {user_id}: {e}")
+        return False
 
 # Keyboards
 def get_lang_keyboard():
@@ -124,9 +139,16 @@ def get_main_keyboard(lang="en"):
         [InlineKeyboardButton(text=t["btn_mines"], callback_data="game_mines"),
          InlineKeyboardButton(text=t["btn_chicken"], callback_data="game_chicken_subway")],
         [InlineKeyboardButton(text=t["btn_reg"], url=REF_URL),
-         InlineKeyboardButton(text=t["btn_verify"], url=CHANNEL_URL)],
+         InlineKeyboardButton(text=t["btn_verify"], callback_data="check_verify")],
         [InlineKeyboardButton(text=t["btn_supp"], url=SUPP),
          InlineKeyboardButton(text=t["btn_lang"], callback_data="change_language")]
+    ])
+
+def get_not_joined_keyboard(lang="en"):
+    t = TEXTS[lang]
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="📢 Join VIP Channel", url=CHANNEL_URL)],
+        [InlineKeyboardButton(text=t["btn_verify"], callback_data="check_verify")]
     ])
 
 # Set Bot Commands Menu
@@ -184,20 +206,53 @@ async def change_lang_handler(callback: types.CallbackQuery):
         parse_mode="Markdown"
     )
 
-@dp.callback_query(F.data == "game_mines")
-async def mines_handler(callback: types.CallbackQuery):
-    await callback.answer()
+@dp.callback_query(F.data == "check_verify")
+async def check_verify_handler(callback: types.CallbackQuery):
     user = callback.from_user
     lang = user_lang.get(user.id, "en")
     t = TEXTS[lang]
 
-    # Generate 5x5 Mines Grid (80% Safe Tiles Revealed)
-    grid = ["💎" if random.random() < 0.8 else "💣" for _ in range(25)]
-    grid_str = "\n".join([" ".join(grid[i:i+5]) for i in range(0, 25, 5)])
+    is_member = await check_channel_member(user.id)
+    if is_member:
+        await callback.answer("✅ Verification successful!", show_alert=True)
+        await callback.message.edit_text(
+            t["welcome"].format(promo=PROMO),
+            reply_markup=get_main_keyboard(lang),
+            parse_mode="Markdown"
+        )
+    else:
+        await callback.answer("❌ You haven't joined the channel yet!", show_alert=True)
 
+@dp.callback_query(F.data == "game_mines")
+async def mines_handler(callback: types.CallbackQuery):
+    user = callback.from_user
+    lang = user_lang.get(user.id, "en")
+    t = TEXTS[lang]
+
+    # Verify channel membership before giving signal
+    is_member = await check_channel_member(user.id)
+    if not is_member:
+        await callback.answer()
+        await callback.message.edit_text(
+            t["not_member"],
+            reply_markup=get_not_joined_keyboard(lang),
+            parse_mode="Markdown"
+        )
+        return
+
+    await callback.answer()
+
+    # Exactly 20 tiles revealed (80%), 5 unrevealed (20%)
+    revealed_tiles = ["💎" if random.random() < 0.75 else "💣" for _ in range(20)]
+    unrevealed_tiles = ["⬛" for _ in range(5)]
+    grid_pool = revealed_tiles + unrevealed_tiles
+    random.shuffle(grid_pool)
+
+    # Format 5x5 grid string
+    grid_str = "\n".join([" ".join(grid_pool[i:i+5]) for i in range(0, 25, 5)])
     response_text = f"{t['mines_title']}\n\n{grid_str}"
+
     safe_name = escape_md(user.full_name)
-    
     asyncio.create_task(
         notify_admin_log(f"💣 **Signal (Mines):** {safe_name} (`{user.id}`)")
     )
@@ -209,10 +264,22 @@ async def mines_handler(callback: types.CallbackQuery):
 
 @dp.callback_query(F.data == "game_chicken_subway")
 async def chicken_subway_handler(callback: types.CallbackQuery):
-    await callback.answer()
     user = callback.from_user
     lang = user_lang.get(user.id, "en")
     t = TEXTS[lang]
+
+    # Verify channel membership before giving signal
+    is_member = await check_channel_member(user.id)
+    if not is_member:
+        await callback.answer()
+        await callback.message.edit_text(
+            t["not_member"],
+            reply_markup=get_not_joined_keyboard(lang),
+            parse_mode="Markdown"
+        )
+        return
+
+    await callback.answer()
 
     s1 = [round(random.uniform(1.10, 1.25), 2), round(random.uniform(1.30, 1.50), 2), round(random.uniform(1.60, 2.00), 2)]
     s2 = [round(random.uniform(1.40, 1.80), 2), round(random.uniform(1.90, 2.40), 2), round(random.uniform(2.50, 3.20), 2)]
@@ -220,7 +287,7 @@ async def chicken_subway_handler(callback: types.CallbackQuery):
     s4 = [round(random.uniform(3.50, 4.80), 2), round(random.uniform(5.20, 7.00), 2), round(random.uniform(7.50, 10.00), 2)]
     s5 = [round(random.uniform(6.00, 8.50), 2), round(random.uniform(9.00, 12.50), 2), round(random.uniform(13.00, 20.00), 2)]
 
-    trk = "Track" if lang == "en" else "Njia"
+    trk = "Track 🛣️" if lang == "en" else "Njia 🛣️"
     r1 = random.choice([f"{trk} 1 (x{s1[0]})", f"{trk} 2 (x{s1[1]})"])
     r2 = random.choice([f"{trk} 1 (x{s2[0]})", f"{trk} 2 (x{s2[1]})"])
     r3 = random.choice([f"{trk} 1 (x{s3[0]})", f"{trk} 2 (x{s3[1]})"])
@@ -281,7 +348,6 @@ async def main():
             allowed_updates=["message", "callback_query", "chat_join_request"]
         )
     finally:
-        # Clean up aiohttp client session on shutdown
         await bot.session.close()
 
 if __name__ == "__main__":
