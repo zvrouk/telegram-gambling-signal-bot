@@ -94,38 +94,23 @@ TEXTS = {
     }
 }
 
+# Helper Function: Escape Special Markdown Characters
+def escape_md(text: str) -> str:
+    if not text:
+        return ""
+    for char in ["_", "*", "`", "["]:
+        text = text.replace(char, f"\\{char}")
+    return text
+
 # Safe Admin Log Notification (Prevents Bot Crashes on Log Errors)
 async def notify_admin_log(text: str):
+    if not VERIFY_CHANNEL_ID:
+        return
     try:
-        # Sanitize text or send without strict markdown parsing if it fails
         await bot.send_message(chat_id=VERIFY_CHANNEL_ID, text=text, parse_mode="Markdown")
     except Exception as e:
         logging.error(f"Failed to send log notification to {VERIFY_CHANNEL_ID}: {e}")
 
-# Fixed Language Handler
-@dp.callback_query(F.data.startswith("set_lang_"))
-async def set_language_handler(callback: types.CallbackQuery):
-    await callback.answer()
-    
-    lang = callback.data.split("_")[2]
-    user = callback.from_user
-    user_lang[user.id] = lang
-    t = TEXTS[lang]
-    
-    # Safe User Display Name (escapes markdown special characters)
-    safe_name = user.full_name.replace("_", "\\_").replace("*", "\\*").replace("`", "\\`").replace("[", "\\[")
-    
-    # Send log safely without blocking the user flow
-    asyncio.create_task(
-        notify_admin_log(f"👤 **New User Set Language:** {safe_name} (`{user.id}`) ➡️ `{lang.upper()}`")
-    )
-    
-    # Edit message to welcome screen
-    await callback.message.edit_text(
-        t["welcome"].format(promo=PROMO),
-        reply_markup=get_main_keyboard(lang),
-        parse_mode="Markdown"
-    )
 # Keyboards
 def get_lang_keyboard():
     return InlineKeyboardMarkup(inline_keyboard=[
@@ -136,12 +121,12 @@ def get_lang_keyboard():
 def get_main_keyboard(lang="en"):
     t = TEXTS[lang]
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=t["btn_mines"], callback_query_data="game_mines"),
-         InlineKeyboardButton(text=t["btn_chicken"], callback_query_data="game_chicken_subway")],
+        [InlineKeyboardButton(text=t["btn_mines"], callback_data="game_mines"),
+         InlineKeyboardButton(text=t["btn_chicken"], callback_data="game_chicken_subway")],
         [InlineKeyboardButton(text=t["btn_reg"], url=REF_URL),
          InlineKeyboardButton(text=t["btn_verify"], url=CHANNEL_URL)],
         [InlineKeyboardButton(text=t["btn_supp"], url=SUPP),
-         InlineKeyboardButton(text=t["btn_lang"], callback_query_data="change_language")]
+         InlineKeyboardButton(text=t["btn_lang"], callback_data="change_language")]
     ])
 
 # Set Bot Commands Menu
@@ -179,7 +164,11 @@ async def set_language_handler(callback: types.CallbackQuery):
     user_lang[user.id] = lang
     t = TEXTS[lang]
     
-    await notify_admin_log(f"👤 **New User Set Language:** {user.full_name} (`{user.id}`) ➡️ `{lang.upper()}`")
+    safe_name = escape_md(user.full_name)
+    asyncio.create_task(
+        notify_admin_log(f"👤 **New User Set Language:** {safe_name} (`{user.id}`) ➡️ `{lang.upper()}`")
+    )
+    
     await callback.message.edit_text(
         t["welcome"].format(promo=PROMO),
         reply_markup=get_main_keyboard(lang),
@@ -207,8 +196,11 @@ async def mines_handler(callback: types.CallbackQuery):
     grid_str = "\n".join([" ".join(grid[i:i+5]) for i in range(0, 25, 5)])
 
     response_text = f"{t['mines_title']}\n\n{grid_str}"
+    safe_name = escape_md(user.full_name)
     
-    await notify_admin_log(f"💣 **Signal (Mines):** {user.full_name} [`{user.id}`]")
+    asyncio.create_task(
+        notify_admin_log(f"💣 **Signal (Mines):** {safe_name} (`{user.id}`)")
+    )
     await callback.message.edit_text(
         response_text,
         parse_mode="Markdown",
@@ -242,7 +234,10 @@ async def chicken_subway_handler(callback: types.CallbackQuery):
         s5_1=s5[0], s5_2=s5[1], s5_3=s5[2]
     )
 
-    await notify_admin_log(f"🐔 **Signal (Chicken Subway):** {user.full_name} [`{user.id}`]")
+    safe_name = escape_md(user.full_name)
+    asyncio.create_task(
+        notify_admin_log(f"🐔 **Signal (Chicken Subway):** {safe_name} (`{user.id}`)")
+    )
     await callback.message.edit_text(
         response_text,
         parse_mode="Markdown",
@@ -254,7 +249,10 @@ async def auto_approve_join_request(chat_join_request: types.ChatJoinRequest):
     try:
         await chat_join_request.approve()
         user = chat_join_request.from_user
-        await notify_admin_log(f"⚡ **Auto-Approved Join Request:** {user.full_name} [`{user.id}`]")
+        safe_name = escape_md(user.full_name)
+        asyncio.create_task(
+            notify_admin_log(f"⚡ **Auto-Approved Join Request:** {safe_name} (`{user.id}`)")
+        )
     except Exception as e:
         logging.error(f"Failed to approve join request: {e}")
 
