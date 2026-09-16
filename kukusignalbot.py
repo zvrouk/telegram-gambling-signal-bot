@@ -56,12 +56,28 @@ TEXTS = {
             "To access signals, you must join our official Telegram channel first.\n"
             "Click below to request access, then tap **✅ Verify Access**!"
         ),
+        "reg_menu": (
+            "📝 **1WIN REGISTRATION & PROMO CODE**\n\n"
+            "🎁 Use Promo Code: `{promo}` to claim your **500% Deposit Bonus**!\n\n"
+            "Choose an option below to register or watch the guide:"
+        ),
+        "reg_tutorial": (
+            "📖 **HOW TO REGISTER & ACTIVATE BONUS**\n\n"
+            "1️⃣ Click the **🌐 Official 1Win Link** below.\n"
+            "2️⃣ Click on **Registration** on the top right.\n"
+            "3️⃣ Fill in your phone number, email, and password.\n"
+            "4️⃣ Tap **'Add Promo Code'** and enter: `{promo}`\n"
+            "5️⃣ Complete registration and make your first deposit to instantly get your **500% Bonus**! 💰"
+        ),
         "btn_mines": "💣 Mines Signal",
         "btn_chicken": "🐔 Chicken Subway",
         "btn_reg": "🔗 Register Account",
         "btn_verify": "✅ Verify Access",
         "btn_supp": "💬 Support",
-        "btn_lang": "🌐 Switch Language"
+        "btn_lang": "🌐 Switch Language",
+        "btn_reg_link": "🌐 Official 1Win Link",
+        "btn_tutorial": "📚 How to Register & Use Promo Code",
+        "btn_back": "🔙 Back to Main Menu"
     },
     "sw": {
         "welcome": (
@@ -91,12 +107,28 @@ TEXTS = {
             "Ili kupata ishara, lazima ujiunge na chaneli yetu rasmi ya Telegram kwanza.\n"
             "Bofya hapa chini kuomba kujiunga, kisha ubonyeze **✅ Thibitisha Ufikiaji**!"
         ),
+        "reg_menu": (
+            "📝 **USAJILI WA 1WIN NA PROMO CODE**\n\n"
+            "🎁 Tumia Promo Code: `{promo}` kupata **Bonus ya 500%** ya amana!\n\n"
+            "Chagua chaguo hapa chini kujisajili au kusoma mwongozo:"
+        ),
+        "reg_tutorial": (
+            "📖 **JINSI YA KUJISAJILI NA KUTUMIA BONUS**\n\n"
+            "1️⃣ Bofya **🌐 Link Rasmi ya 1Win** hapo chini.\n"
+            "2️⃣ Bofya **Usajili (Registration)** juu kulia.\n"
+            "3️⃣ Weka namba yako ya simu, barua pepe, na neno la siri.\n"
+            "4️⃣ Bofya **'Ongeza Promo Code'** na uweke: `{promo}`\n"
+            "5️⃣ Kumaliza usajili na uweke amana yako ya kwanza ili kupata **Bonus ya 500%** papo hapo! 💰"
+        ),
         "btn_mines": "💣 Ishara ya Mines",
         "btn_chicken": "🐔 Chicken Subway",
         "btn_reg": "🔗 Jisajili Akaunti",
         "btn_verify": "✅ Thibitisha Ufikiaji",
         "btn_supp": "💬 Msaada",
-        "btn_lang": "🌐 Badilisha Lugha"
+        "btn_lang": "🌐 Badilisha Lugha",
+        "btn_reg_link": "🌐 Link Rasmi ya 1Win",
+        "btn_tutorial": "📚 Jinsi ya Kujisajili & Kutumia Promo Code",
+        "btn_back": "🔙 Rudi Menu Kuu"
     }
 }
 
@@ -138,10 +170,17 @@ def get_main_keyboard(lang="en"):
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=t["btn_mines"], callback_data="game_mines"),
          InlineKeyboardButton(text=t["btn_chicken"], callback_data="game_chicken_subway")],
-        [InlineKeyboardButton(text=t["btn_reg"], url=REF_URL),
-         InlineKeyboardButton(text=t["btn_verify"], callback_data="check_verify")],
+        [InlineKeyboardButton(text=t["btn_reg"], callback_data="menu_register")],
         [InlineKeyboardButton(text=t["btn_supp"], url=SUPP),
          InlineKeyboardButton(text=t["btn_lang"], callback_data="change_language")]
+    ])
+
+def get_register_keyboard(lang="en"):
+    t = TEXTS[lang]
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=t["btn_reg_link"], url=REF_URL)],
+        [InlineKeyboardButton(text=t["btn_tutorial"], callback_data="show_tutorial")],
+        [InlineKeyboardButton(text=t["btn_back"], callback_data="back_to_main")]
     ])
 
 def get_not_joined_keyboard(lang="en"):
@@ -160,26 +199,19 @@ async def set_bot_commands():
     await bot.set_my_commands(commands)
 
 # Handlers
+
 @dp.message(CommandStart())
 async def start_handler(message: types.Message):
-    user = message.from_user
-    if user.id not in user_lang:
-        await message.answer(
-            "🌐 **Select Your Language / Chagua Lugha Yako:**",
-            reply_markup=get_lang_keyboard(),
-            parse_mode="Markdown"
-        )
-    else:
-        lang = user_lang[user.id]
-        t = TEXTS[lang]
-        await message.answer(
-            t["welcome"].format(promo=PROMO),
-            reply_markup=get_main_keyboard(lang),
-            parse_mode="Markdown"
-        )
+    """Step 1: Always force language selection on /start"""
+    await message.answer(
+        "🌐 **Select Your Language / Chagua Lugha Yako:**",
+        reply_markup=get_lang_keyboard(),
+        parse_mode="Markdown"
+    )
 
 @dp.callback_query(F.data.startswith("set_lang_"))
 async def set_language_handler(callback: types.CallbackQuery):
+    """Step 2: Save language preference, then check channel verification immediately."""
     await callback.answer()
     lang = callback.data.split("_")[2]
     user = callback.from_user
@@ -188,14 +220,23 @@ async def set_language_handler(callback: types.CallbackQuery):
     
     safe_name = escape_md(user.full_name)
     asyncio.create_task(
-        notify_admin_log(f"👤 **New User Set Language:** {safe_name} (`{user.id}`) ➡️ `{lang.upper()}`")
+        notify_admin_log(f"👤 **User Selected Language:** {safe_name} (`{user.id}`) ➡️ `{lang.upper()}`")
     )
     
-    await callback.message.edit_text(
-        t["welcome"].format(promo=PROMO),
-        reply_markup=get_main_keyboard(lang),
-        parse_mode="Markdown"
-    )
+    # Check Channel Membership right after selecting language
+    is_member = await check_channel_member(user.id)
+    if is_member:
+        await callback.message.edit_text(
+            t["welcome"].format(promo=PROMO),
+            reply_markup=get_main_keyboard(lang),
+            parse_mode="Markdown"
+        )
+    else:
+        await callback.message.edit_text(
+            t["not_member"],
+            reply_markup=get_not_joined_keyboard(lang),
+            parse_mode="Markdown"
+        )
 
 @dp.callback_query(F.data == "change_language")
 async def change_lang_handler(callback: types.CallbackQuery):
@@ -223,13 +264,51 @@ async def check_verify_handler(callback: types.CallbackQuery):
     else:
         await callback.answer("❌ You haven't joined the channel yet!", show_alert=True)
 
+@dp.callback_query(F.data == "menu_register")
+async def register_menu_handler(callback: types.CallbackQuery):
+    await callback.answer()
+    user = callback.from_user
+    lang = user_lang.get(user.id, "en")
+    t = TEXTS[lang]
+
+    await callback.message.edit_text(
+        t["reg_menu"].format(promo=PROMO),
+        reply_markup=get_register_keyboard(lang),
+        parse_mode="Markdown"
+    )
+
+@dp.callback_query(F.data == "show_tutorial")
+async def tutorial_handler(callback: types.CallbackQuery):
+    await callback.answer()
+    user = callback.from_user
+    lang = user_lang.get(user.id, "en")
+    t = TEXTS[lang]
+
+    await callback.message.edit_text(
+        t["reg_tutorial"].format(promo=PROMO),
+        reply_markup=get_register_keyboard(lang),
+        parse_mode="Markdown"
+    )
+
+@dp.callback_query(F.data == "back_to_main")
+async def back_to_main_handler(callback: types.CallbackQuery):
+    await callback.answer()
+    user = callback.from_user
+    lang = user_lang.get(user.id, "en")
+    t = TEXTS[lang]
+
+    await callback.message.edit_text(
+        t["welcome"].format(promo=PROMO),
+        reply_markup=get_main_keyboard(lang),
+        parse_mode="Markdown"
+    )
+
 @dp.callback_query(F.data == "game_mines")
 async def mines_handler(callback: types.CallbackQuery):
     user = callback.from_user
     lang = user_lang.get(user.id, "en")
     t = TEXTS[lang]
 
-    # Verify channel membership before giving signal
     is_member = await check_channel_member(user.id)
     if not is_member:
         await callback.answer()
@@ -242,13 +321,12 @@ async def mines_handler(callback: types.CallbackQuery):
 
     await callback.answer()
 
-    # Exactly 20 tiles revealed (80%), 5 unrevealed (20%)
+    # 20 tiles revealed (80%), 5 unrevealed (20%)
     revealed_tiles = ["💎" if random.random() < 0.75 else "💣" for _ in range(20)]
-    unrevealed_tiles = ["⬛" for _ in range(5)]
+    unrevealed_tiles = ["❓" for _ in range(5)]
     grid_pool = revealed_tiles + unrevealed_tiles
     random.shuffle(grid_pool)
 
-    # Format 5x5 grid string
     grid_str = "\n".join([" ".join(grid_pool[i:i+5]) for i in range(0, 25, 5)])
     response_text = f"{t['mines_title']}\n\n{grid_str}"
 
@@ -268,7 +346,6 @@ async def chicken_subway_handler(callback: types.CallbackQuery):
     lang = user_lang.get(user.id, "en")
     t = TEXTS[lang]
 
-    # Verify channel membership before giving signal
     is_member = await check_channel_member(user.id)
     if not is_member:
         await callback.answer()
@@ -323,7 +400,7 @@ async def auto_approve_join_request(chat_join_request: types.ChatJoinRequest):
     except Exception as e:
         logging.error(f"Failed to approve join request: {e}")
 
-# Dummy Server for Render Web Service Uptime
+# Dummy Server for Render Uptime
 async def handle_ping(request):
     return web.Response(text="Bot is running smoothly!")
 
@@ -340,7 +417,7 @@ async def start_dummy_server():
 # Main Entry Point
 async def main():
     await set_bot_commands()
-    await start_dummy_server()  # Starts the server for Render health checks
+    await start_dummy_server()
     
     try:
         await dp.start_polling(
