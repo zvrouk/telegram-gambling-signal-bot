@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO)
 
 # Config / Environment Variables
 BOT_TOKEN = os.getenv("BOT_TOKEN", "8752011014:AAFD5AkO84Tqy75FbCXwPdsvOLiNJ5hjOiQ")
-REF_URL = os.getenv("REF_URL", "https://lkyr.cc/6335d9")
+REF_URL = os.getenv("REF_URL", "https://lktu.cc/c66085")
 CHANNEL_URL = os.getenv("CHANNEL_URL", "https://t.me/+WF5cBxNLYy0wMGU0")
 CHANNEL_ID = os.getenv("CHANNEL_ID", "-1002163714024")
 VERIFY_CHANNEL_ID = os.getenv("VERIFY_CHANNEL_ID", "-1004417062544")
