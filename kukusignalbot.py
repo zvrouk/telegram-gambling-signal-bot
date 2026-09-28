@@ -36,11 +36,14 @@ TEXTS = {
             "🔥 **Use Promo Code:** `{promo}` for a **500% Deposit Bonus!**\n\n"
             "Select an option below to continue:"
         ),
+        "select_traps": "🎮 **SELECT NUMBER OF TRAPS:**\n\nChoose how many traps are set in your 1Win Mines session:",
         "mines_title": (
             "💣 **1WIN MINES SIGNAL GENERATED**\n\n"
-            "📊 **Grid Status:** 80% Revealed (20/25 Tiles)\n"
-            "Grid Size: **5x5**\n\n"
-            "Reveal the safe tiles on 1Win now!"
+            "📊 **Grid Size:** 5x5\n"
+            "⚠️ **Traps Selected:** {traps}\n"
+            "👁️ **Traps Revealed:** {traps_revealed}\n"
+            "🟦 **Hidden Tiles:** {unrevealed}\n\n"
+            "Reveal the safe 💎 tiles on 1Win now!"
         ),
         "chicken_title": (
             "🐔 **CHICKEN SUBWAY SIGNAL** 🏃‍♂️💨\n\n"
@@ -87,11 +90,14 @@ TEXTS = {
             "🔥 **Tumia Promo Code:** `{promo}` kupata **Bonus ya 500%!**\n\n"
             "Chagua chaguo hapa chini kuendelea:"
         ),
+        "select_traps": "🎮 **CHAGUA IDADI YA TRAPS:**\n\nChagua idadi ya traps zilizowekwa kwenye mchezo wako wa 1Win Mines:",
         "mines_title": (
             "💣 **ISHARA YA 1WIN MINES**\n\n"
-            "📊 **Hali ya Grid:** 80% Imefunguliwa (Vigae 20/25)\n"
-            "Ukubwa wa Grid: **5x5**\n\n"
-            "Fungua vigae salama kwenye 1Win sasa!"
+            "📊 **Ukubwa wa Grid:** 5x5\n"
+            "⚠️ **Traps Zilizochaguliwa:** {traps}\n"
+            "👁️ **Traps Zilizofunguliwa:** {traps_revealed}\n"
+            "🟦 **Vigae Vilivyofichwa:** {unrevealed}\n\n"
+            "Fungua vigae salama vya 💎 kwenye 1Win sasa!"
         ),
         "chicken_title": (
             "🐔 **ISHARA YA CHICKEN SUBWAY** 🏃‍♂️💨\n\n"
@@ -173,6 +179,20 @@ def get_main_keyboard(lang="en"):
         [InlineKeyboardButton(text=t["btn_reg"], callback_data="menu_register")],
         [InlineKeyboardButton(text=t["btn_supp"], url=SUPP),
          InlineKeyboardButton(text=t["btn_lang"], callback_data="change_language")]
+    ])
+
+def get_traps_keyboard(lang="en"):
+    t = TEXTS[lang]
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="1 Trap 💣", callback_data="mines_trap_1"),
+            InlineKeyboardButton(text="3 Traps 💣", callback_data="mines_trap_3")
+        ],
+        [
+            InlineKeyboardButton(text="5 Traps 💣", callback_data="mines_trap_5"),
+            InlineKeyboardButton(text="7 Traps 💣", callback_data="mines_trap_7")
+        ],
+        [InlineKeyboardButton(text=t["btn_back"], callback_data="back_to_main")]
     ])
 
 def get_register_keyboard(lang="en"):
@@ -304,7 +324,32 @@ async def back_to_main_handler(callback: types.CallbackQuery):
     )
 
 @dp.callback_query(F.data == "game_mines")
-async def mines_handler(callback: types.CallbackQuery):
+async def mines_select_traps(callback: types.CallbackQuery):
+    """Prompts user to select the number of traps (1, 3, 5, or 7)."""
+    user = callback.from_user
+    lang = user_lang.get(user.id, "en")
+    t = TEXTS[lang]
+
+    is_member = await check_channel_member(user.id)
+    if not is_member:
+        await callback.answer()
+        await callback.message.edit_text(
+            t["not_member"],
+            reply_markup=get_not_joined_keyboard(lang),
+            parse_mode="Markdown"
+        )
+        return
+
+    await callback.answer()
+    await callback.message.edit_text(
+        t["select_traps"],
+        reply_markup=get_traps_keyboard(lang),
+        parse_mode="Markdown"
+    )
+
+@dp.callback_query(F.data.startswith("mines_trap_"))
+async def mines_generate_signal(callback: types.CallbackQuery):
+    """Generates the grid based on selected traps with precise constraints."""
     user = callback.from_user
     lang = user_lang.get(user.id, "en")
     t = TEXTS[lang]
@@ -321,23 +366,54 @@ async def mines_handler(callback: types.CallbackQuery):
 
     await callback.answer()
 
-    # 20 tiles revealed (80%), 5 unrevealed (20%)
-    revealed_tiles = ["💎" if random.random() < 0.75 else "💣" for _ in range(20)]
-    unrevealed_tiles = ["🟦" for _ in range(5)]
-    grid_pool = revealed_tiles + unrevealed_tiles
+    traps = int(callback.data.split("_")[2])
+
+    # Rule Definition: (revealed_traps, unrevealed_tiles)
+    if traps == 1:
+        revealed_traps = 0
+        unrevealed_count = random.randint(3, 7)
+    elif traps == 3:
+        revealed_traps = random.randint(1, 2)
+        unrevealed_count = random.randint(5, 9)
+    elif traps == 5:
+        revealed_traps = random.randint(1, 3)
+        unrevealed_count = random.randint(6, 10)
+    elif traps == 7:
+        revealed_traps = random.randint(1, 5)
+        unrevealed_count = random.randint(7, 13)
+    else:
+        revealed_traps = 1
+        unrevealed_count = 5
+
+    # 5x5 Grid total = 25 tiles
+    # Revealed Safe Tiles (💎) filling the rest
+    safe_tiles_count = 25 - revealed_traps - unrevealed_count
+
+    grid_pool = (
+        ["💣"] * revealed_traps +
+        ["🟦"] * unrevealed_count +
+        ["💎"] * safe_tiles_count
+    )
     random.shuffle(grid_pool)
 
     grid_str = "\n".join([" ".join(grid_pool[i:i+5]) for i in range(0, 25, 5)])
-    response_text = f"{t['mines_title']}\n\n{grid_str}"
+
+    header = t["mines_title"].format(
+        traps=traps,
+        traps_revealed=revealed_traps,
+        unrevealed=unrevealed_count
+    )
+    response_text = f"{header}\n\n{grid_str}"
 
     safe_name = escape_md(user.full_name)
     asyncio.create_task(
-        notify_admin_log(f"💣 **Signal (Mines):** {safe_name} (`{user.id}`)")
+        notify_admin_log(f"💣 **Signal (Mines - {traps} Traps):** {safe_name} (`{user.id}`)")
     )
+
     await callback.message.edit_text(
         response_text,
         parse_mode="Markdown",
-        reply_markup=get_main_keyboard(lang)
+        reply_markup=get_traps_keyboard(lang)
     )
 
 @dp.callback_query(F.data == "game_chicken_subway")
