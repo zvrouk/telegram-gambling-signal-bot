@@ -377,10 +377,10 @@ async def mines_generate_signal(callback: types.CallbackQuery):
         unrevealed_count = random.randint(5, 9)
     elif traps == 5:
         revealed_traps = random.randint(1, 3)
-        unrevealed_count = random.randint(6, 10)
+        unrevealed_count = random.randint(7, 11)
     elif traps == 7:
         revealed_traps = random.randint(1, 5)
-        unrevealed_count = random.randint(7, 13)
+        unrevealed_count = random.randint(9, 13)
     else:
         revealed_traps = 1
         unrevealed_count = 5
