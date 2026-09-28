@@ -47,11 +47,16 @@ TEXTS = {
         ),
         "chicken_title": (
             "🐔 **CHICKEN SUBWAY SIGNAL** 🏃‍♂️💨\n\n"
-            "📍 **Step 1:** Odds ({s1_1}, {s1_2}, {s1_3}) ➡️ **Pick {r1}**\n"
-            "📍 **Step 2:** Odds ({s2_1}, {s2_2}, {s2_3}) ➡️ **Pick {r2}**\n"
-            "📍 **Step 3:** Odds ({s3_1}, {s3_2}, {s3_3}) ➡️ **Pick {r3}**\n"
-            "📍 **Step 4:** Odds ({s4_1}, {s4_2}, {s4_3}) ➡️ **Pick {r4}**\n"
-            "📍 **Step 5:** Odds ({s5_1}, {s5_2}, {s5_3}) ➡️ **Cash Out!** 💰\n\n"
+            "📍 **Step 1:** {s1}\n"
+            "📍 **Step 2:** {s2}\n"
+            "📍 **Step 3:** {s3}\n"
+            "📍 **Step 4:** {s4}\n"
+            "📍 **Step 5:** {s5}\n"
+            "📍 **Step 6:** {s6}\n"
+            "📍 **Step 7:** {s7}\n"
+            "📍 **Step 8:** {s8}\n"
+            "📍 **Step 9:** {s9}\n"
+            "📍 **Step 10:** {s10} 💰\n\n"
             "⚠️ Stick to the exact path for maximum accuracy!"
         ),
         "not_member": (
@@ -101,11 +106,16 @@ TEXTS = {
         ),
         "chicken_title": (
             "🐔 **ISHARA YA CHICKEN SUBWAY** 🏃‍♂️💨\n\n"
-            "📍 **Hatua ya 1:** Odds ({s1_1}, {s1_2}, {s1_3}) ➡️ **Chagua {r1}**\n"
-            "📍 **Hatua ya 2:** Odds ({s2_1}, {s2_2}, {s2_3}) ➡️ **Chagua {r2}**\n"
-            "📍 **Hatua ya 3:** Odds ({s3_1}, {s3_2}, {s3_3}) ➡️ **Chagua {r3}**\n"
-            "📍 **Hatua ya 4:** Odds ({s4_1}, {s4_2}, {s4_3}) ➡️ **Chagua {r4}**\n"
-            "📍 **Hatua ya 5:** Odds ({s5_1}, {s5_2}, {s5_3}) ➡️ **Chukua Pesa!** 💰\n\n"
+            "📍 **Hatua ya 1:** {s1}\n"
+            "📍 **Hatua ya 2:** {s2}\n"
+            "📍 **Hatua ya 3:** {s3}\n"
+            "📍 **Hatua ya 4:** {s4}\n"
+            "📍 **Hatua ya 5:** {s5}\n"
+            "📍 **Hatua ya 6:** {s6}\n"
+            "📍 **Hatua ya 7:** {s7}\n"
+            "📍 **Hatua ya 8:** {s8}\n"
+            "📍 **Hatua ya 9:** {s9}\n"
+            "📍 **Hatua ya 10:** {s10} 💰\n\n"
             "⚠️ Fuata njia halisi kwa usahihi wa hali ya juu!"
         ),
         "not_member": (
@@ -434,24 +444,16 @@ async def chicken_subway_handler(callback: types.CallbackQuery):
 
     await callback.answer()
 
-    s1 = [round(random.uniform(1.10, 1.25), 2), round(random.uniform(1.30, 1.50), 2), round(random.uniform(1.60, 2.00), 2)]
-    s2 = [round(random.uniform(1.40, 1.80), 2), round(random.uniform(1.90, 2.40), 2), round(random.uniform(2.50, 3.20), 2)]
-    s3 = [round(random.uniform(2.20, 2.80), 2), round(random.uniform(3.00, 4.20), 2), round(random.uniform(4.50, 6.00), 2)]
-    s4 = [round(random.uniform(3.50, 4.80), 2), round(random.uniform(5.20, 7.00), 2), round(random.uniform(7.50, 10.00), 2)]
-    s5 = [round(random.uniform(6.00, 8.50), 2), round(random.uniform(9.00, 12.50), 2), round(random.uniform(13.00, 20.00), 2)]
-
-    trk = "Track 🛣️" if lang == "en" else "Njia 🛣️"
-    r1 = random.choice([f"{trk} 1 (x{s1[0]})", f"{trk} 2 (x{s1[1]})"])
-    r2 = random.choice([f"{trk} 1 (x{s2[0]})", f"{trk} 2 (x{s2[1]})"])
-    r3 = random.choice([f"{trk} 1 (x{s3[0]})", f"{trk} 2 (x{s3[1]})"])
-    r4 = random.choice([f"{trk} 1 (x{s4[0]})", f"{trk} 2 (x{s4[1]})"])
+    # Generate 10 steps, each containing 1 green circle and 2 red circles shuffled randomly
+    steps = []
+    for _ in range(10):
+        circles = ["🟢", "🔴", "🔴"]
+        random.shuffle(circles)
+        steps.append(" ".join(circles))
 
     response_text = t["chicken_title"].format(
-        s1_1=s1[0], s1_2=s1[1], s1_3=s1[2], r1=r1,
-        s2_1=s2[0], s2_2=s2[1], s2_3=s2[2], r2=r2,
-        s3_1=s3[0], s3_2=s3[1], s3_3=s3[2], r3=r3,
-        s4_1=s4[0], s4_2=s4[1], s4_3=s4[2], r4=r4,
-        s5_1=s5[0], s5_2=s5[1], s5_3=s5[2]
+        s1=steps[0], s2=steps[1], s3=steps[2], s4=steps[3], s5=steps[4],
+        s6=steps[5], s7=steps[6], s8=steps[7], s9=steps[8], s10=steps[9]
     )
 
     safe_name = escape_md(user.full_name)
