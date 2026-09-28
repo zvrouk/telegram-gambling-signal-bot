@@ -50,14 +50,8 @@ TEXTS = {
             "📍 **Step 1:** {s1}\n"
             "📍 **Step 2:** {s2}\n"
             "📍 **Step 3:** {s3}\n"
-            "📍 **Step 4:** {s4}\n"
-            "📍 **Step 5:** {s5}\n"
-            "📍 **Step 6:** {s6}\n"
-            "📍 **Step 7:** {s7}\n"
-            "📍 **Step 8:** {s8}\n"
-            "📍 **Step 9:** {s9}\n"
-            "📍 **Step 10:** {s10} 💰\n\n"
-            "⚠️ Stick to the exact path for maximum accuracy!"
+            "📍 **Step 4:** {s4} 💰\n\n"
+            "⚠️ Note: Signals are generated using algorithms and are **not 100% accurate**. Play responsibly!"
         ),
         "not_member": (
             "⚠️ **VIP CHANNEL VERIFICATION REQUIRED**\n\n"
@@ -109,14 +103,8 @@ TEXTS = {
             "📍 **Hatua ya 1:** {s1}\n"
             "📍 **Hatua ya 2:** {s2}\n"
             "📍 **Hatua ya 3:** {s3}\n"
-            "📍 **Hatua ya 4:** {s4}\n"
-            "📍 **Hatua ya 5:** {s5}\n"
-            "📍 **Hatua ya 6:** {s6}\n"
-            "📍 **Hatua ya 7:** {s7}\n"
-            "📍 **Hatua ya 8:** {s8}\n"
-            "📍 **Hatua ya 9:** {s9}\n"
-            "📍 **Hatua ya 10:** {s10} 💰\n\n"
-            "⚠️ Fuata njia halisi kwa usahihi wa hali ya juu!"
+            "📍 **Hatua ya 4:** {s4} 💰\n\n"
+            "⚠️ Kumbuka: Ishara hizi sio asilimia 100 **(not 100% accurate)**. Cheza kwa uangalifu!"
         ),
         "not_member": (
             "⚠️ **UTHIBITISHO WA CHANNEL YA VIP UNAHITAJIKA**\n\n"
@@ -444,16 +432,15 @@ async def chicken_subway_handler(callback: types.CallbackQuery):
 
     await callback.answer()
 
-    # Generate 10 steps, each containing 1 green circle and 2 red circles shuffled randomly
+    # Generate 4 steps, each containing 1 green circle and 2 red circles shuffled randomly
     steps = []
-    for _ in range(10):
+    for _ in range(4):
         circles = ["🟢", "🔴", "🔴"]
         random.shuffle(circles)
         steps.append(" ".join(circles))
 
     response_text = t["chicken_title"].format(
-        s1=steps[0], s2=steps[1], s3=steps[2], s4=steps[3], s5=steps[4],
-        s6=steps[5], s7=steps[6], s8=steps[7], s9=steps[8], s10=steps[9]
+        s1=steps[0], s2=steps[1], s3=steps[2], s4=steps[3]
     )
 
     safe_name = escape_md(user.full_name)
