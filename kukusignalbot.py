@@ -11,7 +11,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 logging.basicConfig(level=logging.INFO)
 
 # Config / Environment Variables
-BOT_TOKEN = os.getenv("BOT_TOKEN", "8752011014:AAFD5AkO84Tqy75FbCXwPdsvOLiNJ5hjOiQ")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 REF_URL = os.getenv("REF_URL", "https://lkrp.cc/c66085")
 CHANNEL_URL = os.getenv("CHANNEL_URL", "https://t.me/+WF5cBxNLYy0wMGU0")
 CHANNEL_ID = os.getenv("CHANNEL_ID", "-1002163714024")
